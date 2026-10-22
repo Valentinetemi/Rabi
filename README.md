@@ -169,3 +169,37 @@ Rules enforced in [`rabi/auth.py`](rabi/auth.py) and `rabi/server.py`:
 - If Rabi would be exposed but no token is set, it **refuses to start**.
 - The SDK's DNS-rebinding protection stays on; only localhost and the hostnames in `RABI_PUBLIC_HOSTS` are accepted as `Host` headers (others get `400`/`421`).
 - Tokens are compared in constant time. Never commit `.env`.
+
+## Testing on your Mac (checklist)
+
+These were unit-tested with mocks on Linux; the macOS-specific parts need a real Mac. Start the server in terminal 1 (`python -m rabi.server`), then in terminal 2 (`source .venv/bin/activate`):
+
+- [ ] **Handshake:** `python scripts/smoke_test.py` → `protocolVersion: 2025-11-25`, 10 tools, ping ok.
+- [ ] **Tests:** `pip install -r requirements-dev.txt && pytest -q` → all pass.
+- [ ] **system_health:** `python scripts/call_tool.py system_health` → `memory_pressure` is `normal`/`warning`/`critical` (not `unknown`). Compare with `memory_pressure` in Terminal or Activity Monitor's Memory tab.
+- [ ] **heavy_apps:** open Chrome or Xcode, then `python scripts/call_tool.py heavy_apps` → shows `Google Chrome` / `Xcode`, not dozens of "Helper" rows.
+- [ ] **disk_space:** `python scripts/call_tool.py disk_space` → `path` is `/System/Volumes/Data`; free GB roughly matches Finder's "Get Info" on Macintosh HD.
+- [ ] **icloud_stuck_projects:** `python scripts/call_tool.py icloud_stuck_projects` → lists projects in Desktop/Documents. To confirm a file is offloaded: `ls -lO <file>` shows `dataless`. To create a test case: right-click a project folder in Finder → **Remove Download**, then rerun.
+- [ ] **unpushed_work:** make a change in a repo under `~/dev` and rerun `python scripts/call_tool.py unpushed_work`.
+- [ ] **close_app:** open Calculator, then
+  `python scripts/call_tool.py close_app '{"app_name": "Calculator"}'` → `needs_confirmation` + token, Calculator still open;
+  `python scripts/call_tool.py close_app '{"app_name": "Calculator", "confirm_token": "<token>"}'` → Calculator quits. The first time, macOS may ask to allow Terminal/Python to control Calculator; click OK.
+  Also try `'{"app_name": "Finder"}'` → `refused`.
+- [ ] **Bedrock:** fill `AWS_REGION` and `BEDROCK_MODEL_ID` in `.env`, restart, `python scripts/call_tool.py why_is_my_mac_slow` → `"source": "bedrock"`. With them blank → `"source": "template"`.
+- [ ] **my_journey:** `cp data/journey.example.json data/journey.json`, fill in real data, then `python scripts/call_tool.py my_journey '{"what_happened": "the AWS cup"}'`.
+- [ ] **Auth:** set `RABI_AUTH_TOKEN` in `.env`, restart; `curl -i -X POST http://127.0.0.1:8000/mcp` → `401`; `python scripts/smoke_test.py` still works (it sends the token).
+- [ ] **Inspector:** see [Test with MCP Inspector](#test-with-mcp-inspector).
+
+## Known limitations
+
+- macOS only for the real checks. On other systems memory pressure is `unknown`, iCloud detection finds nothing, and `close_app` returns `unsupported`.
+- `icloud_stuck_projects` samples up to 200 files per project and searches 3 levels deep, so a mostly-local project with a few offloaded files may be under-reported.
+- `unpushed_work` never runs `git fetch`, so "ahead" is relative to the last fetch.
+- `close_app` tokens live in memory; restarting the server invalidates them. If an app shows a save dialog, it stays open until you answer it.
+- `my_journey` only knows what's in `data/journey.json`. Keep it updated.
+- The Bedrock path is covered by mocked tests; it needs real AWS credentials and model access to verify end to end.
+- Rabi offers encouragement, not therapy. If things feel heavy, talk to someone you trust.
+
+## License
+
+[MIT](LICENSE) © 2026 Temiloluwa Valentine
