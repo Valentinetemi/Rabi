@@ -1,4 +1,4 @@
-"""Rabi MCP server (step 1: skeleton with a single `ping` tool).
+"""Rabi MCP server: Mac diagnostics and encouragement for developers, via Alexa+.
 
 Run with:  python -m rabi.server
 Serves MCP over Streamable HTTP at http://<RABI_HOST>:<RABI_PORT>/mcp
@@ -9,6 +9,9 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
+
+from rabi.auth import BearerAuthMiddleware, auth_required
 
 from rabi.tools.apps import heavy_apps
 from rabi.tools.close_app import close_app
@@ -26,6 +29,9 @@ load_dotenv()
 # so it must not be reachable from the network unless we deliberately expose it.
 HOST = os.getenv("RABI_HOST", "127.0.0.1")
 PORT = int(os.getenv("RABI_PORT", "8000"))
+AUTH_TOKEN = os.getenv("RABI_AUTH_TOKEN") or None
+# Public hostnames that forward to us, e.g. "abc123.ngrok-free.app" (comma separated).
+PUBLIC_HOSTS = [h.strip() for h in os.getenv("RABI_PUBLIC_HOSTS", "").split(",") if h.strip()]
 
 mcp = MCPServer("rabi")
 
@@ -59,9 +65,30 @@ mcp.tool()(my_journey)
 mcp.tool()(close_app)
 
 
+def build_app():
+    """Create the Streamable HTTP ASGI app, adding auth and host checks as needed."""
+    # The SDK blocks unknown Host headers (DNS-rebinding protection). A tunnel like
+    # ngrok sends its own hostname, so we must list it explicitly to allow it.
+    security = TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=["127.0.0.1:*", "localhost:*", "[::1]:*", *PUBLIC_HOSTS],
+        allowed_origins=["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*",
+                         *(f"https://{h}" for h in PUBLIC_HOSTS)],
+    )
+    app = mcp.streamable_http_app(streamable_http_path="/mcp", transport_security=security, host=HOST)
+    if auth_required(HOST, AUTH_TOKEN, PUBLIC_HOSTS):
+        if not AUTH_TOKEN:
+            # Refuse to run exposed without a secret rather than silently being open.
+            raise SystemExit("RABI_AUTH_TOKEN must be set when Rabi is exposed beyond localhost.")
+        app = BearerAuthMiddleware(app, AUTH_TOKEN)
+    return app
+
+
 def main() -> None:
+    import uvicorn
+
     # Streamable HTTP is the transport required by the Alexa+ track (spec 2025-11-25).
-    mcp.run("streamable-http", host=HOST, port=PORT, streamable_http_path="/mcp")
+    uvicorn.run(build_app(), host=HOST, port=PORT)
 
 
 if __name__ == "__main__":
