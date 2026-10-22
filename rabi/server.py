@@ -12,6 +12,7 @@ from mcp.server.mcpserver import MCPServer
 
 from rabi.tools.apps import heavy_apps
 from rabi.tools.disk import disk_space
+from rabi.tools.icloud import icloud_stuck_projects
 from rabi.tools.system import system_health
 
 # Load settings from .env so secrets and ports never live in code.
@@ -40,6 +41,7 @@ def ping() -> dict:
 mcp.tool()(system_health)
 mcp.tool()(heavy_apps)
 mcp.tool()(disk_space)
+mcp.tool()(icloud_stuck_projects)
 
 
 def main() -> None:
