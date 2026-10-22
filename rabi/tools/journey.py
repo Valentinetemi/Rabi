@@ -70,9 +70,10 @@ def compose(s: dict, what_happened: str | None, suggest_friend: bool, today: dat
     if s["hackathon_wins"]:
         facts.append(f"won or placed in {s['hackathon_wins']}")
     if s["finalist"]:
-        facts.append(f"been a finalist {_plural(s['finalist'], 'time')}")
+        facts.append("been a finalist once" if s["finalist"] == 1 else f"been a finalist {s['finalist']} times")
     if facts:
-        lines.append("Here's your real record: " + ", ".join(facts) + ".")
+        joined = facts[0] if len(facts) == 1 else ", ".join(facts[:-1]) + ", and " + facts[-1]
+        lines.append("Here's your real record: " + joined + ".")
     if s["other_wins"]:
         lines.append(f"And this one went your way: {s['other_wins'][-1]}.")
     if s["results_pending"]:
