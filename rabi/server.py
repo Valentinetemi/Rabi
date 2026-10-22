@@ -12,6 +12,7 @@ from mcp.server.mcpserver import MCPServer
 
 from rabi.tools.apps import heavy_apps
 from rabi.tools.close_app import close_app
+from rabi.tools.diagnose import explain_check, why_is_my_mac_slow
 from rabi.tools.disk import disk_space
 from rabi.tools.git_work import unpushed_work
 from rabi.tools.icloud import icloud_stuck_projects
@@ -45,6 +46,10 @@ mcp.tool()(heavy_apps)
 mcp.tool()(disk_space)
 mcp.tool()(icloud_stuck_projects)
 mcp.tool()(unpushed_work)
+
+# Spoken-style answers, explained by Amazon Bedrock (template fallback).
+mcp.tool()(why_is_my_mac_slow)
+mcp.tool()(explain_check)
 
 # The only tool that changes anything; it requires a confirmation round trip.
 mcp.tool()(close_app)
