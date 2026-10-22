@@ -60,6 +60,9 @@ def test_handshake_tools_and_calls(server):
     assert init.server_info.name == "rabi"
     assert "confirm" in (init.instructions or "")
     assert {t.name for t in tools.tools} == EXPECTED_TOOLS
+    hints = {t.name: t.annotations for t in tools.tools}
+    assert hints["close_app"].destructive_hint is True
+    assert hints["system_health"].read_only_hint is True
     assert json.loads(ping.content[0].text)["status"] == "ok"
     assert json.loads(refused.content[0].text)["status"] == "refused"
 

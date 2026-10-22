@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
+from mcp_types import ToolAnnotations
 from mcp.server.transport_security import TransportSecuritySettings
 
 from rabi.auth import BearerAuthMiddleware, auth_required
@@ -43,10 +44,13 @@ INSTRUCTIONS = (
     "When the user says they lost, didn't win or got rejected, use my_journey."
 )
 
+# Hints let the client know which tools are safe to call freely.
+READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=False)
+
 mcp = MCPServer("rabi", title="Rabi", version="0.1.0", instructions=INSTRUCTIONS)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY)
 def ping() -> dict:
     """Check that the Rabi server is alive. Returns status, server name and current UTC time."""
     # A trivial tool lets us prove the full MCP round trip before adding real checks.
@@ -58,21 +62,23 @@ def ping() -> dict:
 
 
 # Register diagnosis tools. Docstrings become the tool descriptions Alexa+ sees.
-mcp.tool()(system_health)
-mcp.tool()(heavy_apps)
-mcp.tool()(disk_space)
-mcp.tool()(icloud_stuck_projects)
-mcp.tool()(unpushed_work)
+mcp.tool(annotations=READ_ONLY)(system_health)
+mcp.tool(annotations=READ_ONLY)(heavy_apps)
+mcp.tool(annotations=READ_ONLY)(disk_space)
+mcp.tool(annotations=READ_ONLY)(icloud_stuck_projects)
+mcp.tool(annotations=READ_ONLY)(unpushed_work)
 
 # Spoken-style answers, explained by Amazon Bedrock (template fallback).
-mcp.tool()(why_is_my_mac_slow)
-mcp.tool()(explain_check)
+# Read-only on the Mac, but they send data to Bedrock (an outside service).
+explains = ToolAnnotations(read_only_hint=True, open_world_hint=True)
+mcp.tool(annotations=explains)(why_is_my_mac_slow)
+mcp.tool(annotations=explains)(explain_check)
 
 # Encouragement grounded in data/journey.json.
-mcp.tool()(my_journey)
+mcp.tool(annotations=READ_ONLY)(my_journey)
 
 # The only tool that changes anything; it requires a confirmation round trip.
-mcp.tool()(close_app)
+mcp.tool(annotations=ToolAnnotations(read_only_hint=False, destructive_hint=True, idempotent_hint=False))(close_app)
 
 
 def build_app():
