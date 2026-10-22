@@ -16,6 +16,7 @@ from rabi.tools.diagnose import explain_check, why_is_my_mac_slow
 from rabi.tools.disk import disk_space
 from rabi.tools.git_work import unpushed_work
 from rabi.tools.icloud import icloud_stuck_projects
+from rabi.tools.journey import my_journey
 from rabi.tools.system import system_health
 
 # Load settings from .env so secrets and ports never live in code.
@@ -50,6 +51,9 @@ mcp.tool()(unpushed_work)
 # Spoken-style answers, explained by Amazon Bedrock (template fallback).
 mcp.tool()(why_is_my_mac_slow)
 mcp.tool()(explain_check)
+
+# Encouragement grounded in data/journey.json.
+mcp.tool()(my_journey)
 
 # The only tool that changes anything; it requires a confirmation round trip.
 mcp.tool()(close_app)
