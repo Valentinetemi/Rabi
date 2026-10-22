@@ -12,6 +12,7 @@ from mcp.server.mcpserver import MCPServer
 
 from rabi.tools.apps import heavy_apps
 from rabi.tools.disk import disk_space
+from rabi.tools.git_work import unpushed_work
 from rabi.tools.icloud import icloud_stuck_projects
 from rabi.tools.system import system_health
 
@@ -42,6 +43,7 @@ mcp.tool()(system_health)
 mcp.tool()(heavy_apps)
 mcp.tool()(disk_space)
 mcp.tool()(icloud_stuck_projects)
+mcp.tool()(unpushed_work)
 
 
 def main() -> None:
