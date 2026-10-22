@@ -64,7 +64,7 @@ cp .env.example .env                   # then edit .env
 cp data/journey.example.json data/journey.json   # then put in your real record
 ```
 
-Requires Python 3.10+ (developed on 3.13). `data/journey.json` and `.env` are gitignored.
+Requires Python 3.11+ (developed on 3.13; all pins verified to have macOS arm64 wheels for 3.11-3.13). Check with `python3 --version`; the Xcode-bundled 3.9 is too old, so use `brew install python@3.13` if needed. `data/journey.json` and `.env` are gitignored.
 
 ## Run
 
