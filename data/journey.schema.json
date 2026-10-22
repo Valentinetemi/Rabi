@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rabi journey file",
+  "description": "Your real record. Rabi only ever repeats what is in this file.",
+  "type": "object",
+  "required": ["name", "hackathons"],
+  "properties": {
+    "name": {"type": "string", "description": "What Rabi calls you."},
+    "hackathons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "date", "result"],
+        "properties": {
+          "name": {"type": "string"},
+          "date": {"type": "string", "format": "date"},
+          "result": {"enum": ["won", "placed", "finalist", "submitted", "not_selected", "pending"]},
+          "project": {"type": "string"}
+        }
+      }
+    },
+    "wins": {
+      "type": "array",
+      "description": "Acceptances, awards, offers: anything that went your way.",
+      "items": {
+        "type": "object",
+        "required": ["title", "date"],
+        "properties": {"title": {"type": "string"}, "date": {"type": "string", "format": "date"}}
+      }
+    },
+    "notable_projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {"name": {"type": "string"}, "summary": {"type": "string"}}
+      }
+    },
+    "upcoming_deadlines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "date"],
+        "properties": {"name": {"type": "string"}, "date": {"type": "string", "format": "date"}}
+      }
+    }
+  }
+}

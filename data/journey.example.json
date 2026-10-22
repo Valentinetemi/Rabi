@@ -1,0 +1,21 @@
+{
+  "_note": "EXAMPLE DATA ONLY. Copy to data/journey.json and replace with your real record.",
+  "name": "Ada",
+  "hackathons": [
+    {"name": "Example Health Hack", "date": "2026-06-14", "result": "submitted", "project": "MedNote"},
+    {"name": "Example AI Jam", "date": "2026-08-02", "result": "finalist", "project": "SignSpeak"},
+    {"name": "Example Fintech Sprint", "date": "2026-09-20", "result": "not_selected", "project": "SplitPay"},
+    {"name": "Example Vision Cup", "date": "2026-10-10", "result": "pending", "project": "FoundThat"}
+  ],
+  "wins": [
+    {"title": "Example mentorship programme acceptance", "date": "2026-10-05"}
+  ],
+  "notable_projects": [
+    {"name": "SignSpeak", "summary": "Example: sign language to speech demo"},
+    {"name": "FoundThat", "summary": "Example: finds misplaced objects from camera snapshots"}
+  ],
+  "upcoming_deadlines": [
+    {"name": "Example Eval Hackathon kickoff", "date": "2026-10-30"},
+    {"name": "Example grad school early deadline", "date": "2026-12-15"}
+  ]
+}
