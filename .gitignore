@@ -1,0 +1,14 @@
+# Secrets: never commit real credentials
+.env
+
+# Personal data: only the example journey file is public
+data/*.json
+!data/journey.example.json
+!data/journey.schema.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
