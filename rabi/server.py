@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
 
 from rabi.tools.apps import heavy_apps
+from rabi.tools.close_app import close_app
 from rabi.tools.disk import disk_space
 from rabi.tools.git_work import unpushed_work
 from rabi.tools.icloud import icloud_stuck_projects
@@ -44,6 +45,9 @@ mcp.tool()(heavy_apps)
 mcp.tool()(disk_space)
 mcp.tool()(icloud_stuck_projects)
 mcp.tool()(unpushed_work)
+
+# The only tool that changes anything; it requires a confirmation round trip.
+mcp.tool()(close_app)
 
 
 def main() -> None:
