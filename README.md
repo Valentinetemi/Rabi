@@ -117,3 +117,55 @@ npx @modelcontextprotocol/inspector --cli --transport http --server-url http://1
 If `RABI_AUTH_TOKEN` is set, add `--header "Authorization: Bearer <your token>"` to each command (put it after `--server-url ...`).
 
 > Protocol note: Rabi negotiates **2025-11-25** in the `initialize` handshake (verified with the official Python client, see `scripts/smoke_test.py`). The MCP Python SDK 2.3.0 also speaks the newer stateless 2026-07-28 revision, so a v2 Inspector may pick that one; both satisfy the hackathon's "2025-11-25 or later" rule. Add `--protocol-era legacy` to force the 2025-11-25 handshake.
+
+## How Amazon Bedrock is used
+
+All Bedrock code is in [`rabi/explain.py`](rabi/explain.py).
+
+1. A tool (`why_is_my_mac_slow` or `explain_check`) runs the real macOS checks and gets JSON.
+2. `explain(topic, data)` creates a `boto3.client("bedrock-runtime", region_name=AWS_REGION)` and calls the **Converse API**:
+   - `modelId` = `BEDROCK_MODEL_ID` from `.env`
+   - `system` = a prompt telling the model to answer in 2-4 short spoken sentences, give exactly one concrete suggestion, use only facts in the JSON, and avoid markdown (it's read aloud)
+   - `messages` = the topic plus the JSON from the checks
+   - `inferenceConfig` = `maxTokens: 200`, `temperature: 0.3` (grounded, not creative)
+3. The reply text goes back to Alexa+ with `"source": "bedrock"`.
+4. If Bedrock isn't configured, or any AWS error happens (no credentials, model access not granted, throttling, network), Rabi logs a warning and returns a hand-written template from [`rabi/templates.py`](rabi/templates.py) with `"source": "template"`. The demo never breaks.
+
+Setup:
+
+```bash
+aws configure            # or set AWS_PROFILE / keys in .env
+```
+
+In `.env`:
+
+```
+AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=us.amazon.nova-lite-v1:0
+```
+
+Any model that supports Converse works. Make sure model access is enabled in the Bedrock console for that region. Some models need an inference profile ID (the `us.` prefix) instead of the bare model ID.
+
+## Security: exposing Rabi to Alexa+
+
+Rabi binds to `127.0.0.1` by default, so only your Mac can reach it. Alexa+ runs in the cloud, so you expose it through a tunnel such as [ngrok](https://ngrok.com):
+
+```bash
+# 1. Make a long random token and put it in .env as RABI_AUTH_TOKEN
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# 2. Start the tunnel and note the hostname, e.g. abc123.ngrok-free.app
+ngrok http 8000
+
+# 3. In .env: RABI_PUBLIC_HOSTS=abc123.ngrok-free.app   then restart Rabi
+python -m rabi.server
+```
+
+Give Alexa+ the URL `https://abc123.ngrok-free.app/mcp` and the header `Authorization: Bearer <RABI_AUTH_TOKEN>`.
+
+Rules enforced in [`rabi/auth.py`](rabi/auth.py) and `rabi/server.py`:
+
+- If `RABI_AUTH_TOKEN` is set, `RABI_PUBLIC_HOSTS` is set, or `RABI_HOST` isn't localhost, **every request needs the bearer token** (else `401`).
+- If Rabi would be exposed but no token is set, it **refuses to start**.
+- The SDK's DNS-rebinding protection stays on; only localhost and the hostnames in `RABI_PUBLIC_HOSTS` are accepted as `Host` headers (others get `400`/`421`).
+- Tokens are compared in constant time. Never commit `.env`.
