@@ -89,3 +89,31 @@ Run the tests (they mock macOS bits, so they also pass on Linux CI):
 pip install -r requirements-dev.txt
 pytest -q
 ```
+
+## Test with MCP Inspector
+
+The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is the official debugging client. The current release (v2) needs **Node 22.19 or newer** (`node --version`; `brew install node` if older).
+
+With the server running in one terminal:
+
+**Web UI**, pre-connected to Rabi:
+
+```bash
+npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:8000/mcp
+```
+
+It opens in your browser. Connect, open the **Tools** tab, list tools, pick `ping` and run it. You should see `{"status": "ok", "server": "rabi", ...}`.
+
+(If you start it with plain `npx @modelcontextprotocol/inspector`, add a server in the UI with transport **Streamable HTTP** and URL `http://127.0.0.1:8000/mcp`.)
+
+**CLI** (no browser, good for quick checks):
+
+```bash
+npx @modelcontextprotocol/inspector --cli --transport http --server-url http://127.0.0.1:8000/mcp --method initialize
+npx @modelcontextprotocol/inspector --cli --transport http --server-url http://127.0.0.1:8000/mcp --method tools/list
+npx @modelcontextprotocol/inspector --cli --transport http --server-url http://127.0.0.1:8000/mcp --method tools/call --tool-name ping
+```
+
+If `RABI_AUTH_TOKEN` is set, add `--header "Authorization: Bearer <your token>"` to each command (put it after `--server-url ...`).
+
+> Protocol note: Rabi negotiates **2025-11-25** in the `initialize` handshake (verified with the official Python client, see `scripts/smoke_test.py`). The MCP Python SDK 2.3.0 also speaks the newer stateless 2026-07-28 revision, so a v2 Inspector may pick that one; both satisfy the hackathon's "2025-11-25 or later" rule. Add `--protocol-era legacy` to force the 2025-11-25 handshake.
