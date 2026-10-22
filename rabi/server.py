@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
 
 from rabi.tools.apps import heavy_apps
+from rabi.tools.disk import disk_space
 from rabi.tools.system import system_health
 
 # Load settings from .env so secrets and ports never live in code.
@@ -38,6 +39,7 @@ def ping() -> dict:
 # Register diagnosis tools. Docstrings become the tool descriptions Alexa+ sees.
 mcp.tool()(system_health)
 mcp.tool()(heavy_apps)
+mcp.tool()(disk_space)
 
 
 def main() -> None:
