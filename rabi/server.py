@@ -1,0 +1,41 @@
+"""Rabi MCP server (step 1: skeleton with a single `ping` tool).
+
+Run with:  python -m rabi.server
+Serves MCP over Streamable HTTP at http://<RABI_HOST>:<RABI_PORT>/mcp
+"""
+
+import os
+from datetime import datetime, timezone
+
+from dotenv import load_dotenv
+from mcp.server.mcpserver import MCPServer
+
+# Load settings from .env so secrets and ports never live in code.
+load_dotenv()
+
+# Default to localhost: the server can inspect (and later close apps on) the Mac,
+# so it must not be reachable from the network unless we deliberately expose it.
+HOST = os.getenv("RABI_HOST", "127.0.0.1")
+PORT = int(os.getenv("RABI_PORT", "8000"))
+
+mcp = MCPServer("rabi")
+
+
+@mcp.tool()
+def ping() -> dict:
+    """Check that the Rabi server is alive. Returns status, server name and current UTC time."""
+    # A trivial tool lets us prove the full MCP round trip before adding real checks.
+    return {
+        "status": "ok",
+        "server": "rabi",
+        "time": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
+def main() -> None:
+    # Streamable HTTP is the transport required by the Alexa+ track (spec 2025-11-25).
+    mcp.run("streamable-http", host=HOST, port=PORT, streamable_http_path="/mcp")
+
+
+if __name__ == "__main__":
+    main()
