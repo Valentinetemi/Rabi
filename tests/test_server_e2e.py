@@ -57,6 +57,8 @@ async def session_run(url, token):
 def test_handshake_tools_and_calls(server):
     init, tools, ping, refused = asyncio.run(session_run(server, "e2e-token"))
     assert init.protocol_version == "2025-11-25"
+    assert init.server_info.name == "rabi"
+    assert "confirm" in (init.instructions or "")
     assert {t.name for t in tools.tools} == EXPECTED_TOOLS
     assert json.loads(ping.content[0].text)["status"] == "ok"
     assert json.loads(refused.content[0].text)["status"] == "refused"

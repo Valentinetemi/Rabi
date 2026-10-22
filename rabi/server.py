@@ -33,7 +33,17 @@ AUTH_TOKEN = os.getenv("RABI_AUTH_TOKEN") or None
 # Public hostnames that forward to us, e.g. "abc123.ngrok-free.app" (comma separated).
 PUBLIC_HOSTS = [h.strip() for h in os.getenv("RABI_PUBLIC_HOSTS", "").split(",") if h.strip()]
 
-mcp = MCPServer("rabi")
+# Instructions are sent to the client (Alexa+) at connect time; they steer how
+# the assistant uses the tools, especially the confirmation step in close_app.
+INSTRUCTIONS = (
+    "Rabi helps a developer understand why their Mac is slow and encourages them after setbacks. "
+    "For 'why is my Mac slow' use why_is_my_mac_slow and read its text aloud. "
+    "Before closing any app, call close_app without a token, ask the user to confirm out loud, "
+    "and only then call it again with the confirm_token. Never guess a token. "
+    "When the user says they lost, didn't win or got rejected, use my_journey."
+)
+
+mcp = MCPServer("rabi", title="Rabi", version="0.1.0", instructions=INSTRUCTIONS)
 
 
 @mcp.tool()
