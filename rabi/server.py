@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from mcp.server.mcpserver import MCPServer
 
+from rabi.tools.system import system_health
+
 # Load settings from .env so secrets and ports never live in code.
 load_dotenv()
 
@@ -30,6 +32,10 @@ def ping() -> dict:
         "server": "rabi",
         "time": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+
+
+# Register diagnosis tools. Docstrings become the tool descriptions Alexa+ sees.
+mcp.tool()(system_health)
 
 
 def main() -> None:
