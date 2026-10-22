@@ -48,3 +48,44 @@ flowchart LR
 2. `close_app(app_name="Simulator", confirm_token="...")` → runs `osascript -e 'quit app "Simulator"'`.
 
 Tokens are single-use, bound to that app, and expire after 60 seconds. Apps can still ask you to save; Rabi never force-kills. Finder, Dock, WindowServer, loginwindow, SystemUIServer, kernel_task, launchd, Terminal, Python and similar are refused.
+
+## Setup (macOS, Apple Silicon)
+
+Keep the project **outside iCloud** (that's the whole point):
+
+```bash
+mkdir -p ~/dev && cd ~/dev
+git clone https://github.com/Valentinetemi/Rabi.git rabi
+cd rabi
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt        # add -r requirements-dev.txt for tests
+cp .env.example .env                   # then edit .env
+cp data/journey.example.json data/journey.json   # then put in your real record
+```
+
+Requires Python 3.10+ (developed on 3.13). `data/journey.json` and `.env` are gitignored.
+
+## Run
+
+```bash
+source .venv/bin/activate
+python -m rabi.server
+# INFO: Uvicorn running on http://127.0.0.1:8000
+```
+
+The MCP endpoint is `http://127.0.0.1:8000/mcp`. Quick check with the bundled client:
+
+```bash
+python scripts/smoke_test.py
+# protocolVersion: 2025-11-25
+# tools: ['close_app', 'disk_space', ..., 'why_is_my_mac_slow']
+# ping: {"status": "ok", "server": "rabi", ...}
+```
+
+Run the tests (they mock macOS bits, so they also pass on Linux CI):
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
